@@ -1,0 +1,56 @@
+#!/bin/bash
+
+printUsage()
+{
+    cat <<HELPTEXT
+If non-empty input is piped into this command, prepends HEADER before the
+output. If there's no output, nothing is printed. Trailing empty lines at the
+end of the input are omitted. An empty separator line is added before all
+HEADERs (except the first one if --id ID (e.g. use PARENT-COMMAND-NAME-\$\$) is
+passed to invocations of this command so that the sequence can be uniquely
+identified).
+HELPTEXT
+    printf 'Usage: %q %s\n' "$(basename "$1")" '[--id ID] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+}
+
+: ${WITHHEADER_PREFIX=[01m}
+: ${WITHHEADER_SUFFIX=[0m}
+colorArg=
+separator=$'\n'
+while [ $# -ne 0 ]
+do
+    case "$1" in
+	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
+	--id)		shift
+			readonly RUNTIME_DIRSPEC=${XDG_RUNTIME_DIR:?}/withHeader
+			[ -d "$RUNTIME_DIRSPEC" ] || mkdir -p -- "$RUNTIME_DIRSPEC" || { printf >&2 'ERROR: Could not initialize runtime store at %s!\n' "$RUNTIME_DIRSPEC"; exit 3; }
+			existingIdFilespec="${RUNTIME_DIRSPEC}/id"; existingId=; [ -r "$existingIdFilespec" ] && < "$existingIdFilespec" IFS=$' ' read -r existingId
+			if [ "$existingId" != "$1" ]; then
+			    # Omit separator on the first header associated with
+			    # ID, and store the ID to be able to recognize it on
+			    # subsequent calls.
+			    separator=
+			    printf '%s\n' "$1" > "$existingIdFilespec"
+			fi
+			shift
+			;;
+	--color=*|--no-color)	colorArg=$1; shift;;
+	--)		shift; break;;
+	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printUsage "$0"; } >&2; exit 2;;
+	*)		break;;
+    esac
+done
+if [ $# -eq 0 ]; then
+    printUsage "$0" >&2
+    exit 2
+fi
+header="$*"
+if [ ! -t 1 ] && [ "$colorArg" != '--color=always' ] || [ "$colorArg" = '--no-color' ] || [ "$colorArg" = '--color=never' ]; then
+    WITHHEADER_PREFIX=
+    WITHHEADER_SUFFIX=
+fi
+
+output=$(</dev/stdin)
+if [ "$output" ]; then
+    printf "${separator}%s%s%s:\\n%s\\n" "$WITHHEADER_PREFIX" "$header" "$WITHHEADER_SUFFIX" "$output"
+fi
