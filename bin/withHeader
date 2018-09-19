@@ -16,23 +16,27 @@ HELPTEXT
 : ${WITHHEADER_PREFIX=[01m}
 : ${WITHHEADER_SUFFIX=[0m}
 colorArg=
+isIdChange() { return 1; }
 separator=$'\n'
 while [ $# -ne 0 ]
 do
     case "$1" in
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
-	--id)		shift
-			readonly RUNTIME_DIRSPEC=${XDG_RUNTIME_DIR:?}/withHeader
-			[ -d "$RUNTIME_DIRSPEC" ] || mkdir -p -- "$RUNTIME_DIRSPEC" || { printf >&2 'ERROR: Could not initialize runtime store at %s!\n' "$RUNTIME_DIRSPEC"; exit 3; }
-			existingIdFilespec="${RUNTIME_DIRSPEC}/id"; existingId=; [ -r "$existingIdFilespec" ] && < "$existingIdFilespec" IFS=$' ' read -r existingId
-			if [ "$existingId" != "$1" ]; then
-			    # Omit separator on the first header associated with
-			    # ID, and store the ID to be able to recognize it on
-			    # subsequent calls.
-			    separator=
-			    printf '%s\n' "$1" > "$existingIdFilespec"
-			fi
-			shift
+	--id)		shift; passedId="$1"; shift
+			isIdChange()
+			{
+			    readonly RUNTIME_DIRSPEC=${XDG_RUNTIME_DIR:?}/withHeader
+			    [ -d "$RUNTIME_DIRSPEC" ] || mkdir -p -- "$RUNTIME_DIRSPEC" || { printf >&2 'ERROR: Could not initialize runtime store at %s!\n' "$RUNTIME_DIRSPEC"; exit 3; }
+			    existingIdFilespec="${RUNTIME_DIRSPEC}/id"; existingId=; [ -r "$existingIdFilespec" ] && < "$existingIdFilespec" IFS=$' ' read -r existingId
+			    if [ "$existingId" != "$passedId" ]; then
+				# Omit separator on the first header associated with
+				# ID, and store the ID to be able to recognize it on
+				# subsequent calls.
+				printf '%s\n' "$passedId" > "$existingIdFilespec"
+				return 0
+			    fi
+			    return 1
+			}
 			;;
 	--color=*|--no-color)	colorArg=$1; shift;;
 	--)		shift; break;;
@@ -52,5 +56,6 @@ fi
 
 output=$(</dev/stdin)
 if [ "$output" ]; then
+    isIdChange && separator=
     printf "${separator}%s%s%s:\\n%s\\n" "$WITHHEADER_PREFIX" "$header" "$WITHHEADER_SUFFIX" "$output"
 fi
