@@ -1,0 +1,39 @@
+#!/bin/bash
+
+printUsage()
+{
+    cat <<HELPTEXT
+Print HEADER (before any command output); when combined with filterEmptyHeaders,
+those headers where no command output followed can be finally filtered out.
+HELPTEXT
+    scriptName="$(basename "$1")"
+    printf 'Usage: %q %s\n' "$scriptName" '[--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: { %q HEADER1; CMD1; %q HEADER2; CMD2; [...]; } | filterEmptyHeaders\n' "$scriptName" "$scriptName"
+}
+
+: ${HEADER_PREFIX=[01m}
+: ${HEADER_SUFFIX=[0m}
+colorArg=
+while [ $# -ne 0 ]
+do
+    case "$1" in
+	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
+	--color=*|--no-color)	colorArg=$1; shift;;
+	--)		shift; break;;
+	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printUsage "$0"; } >&2; exit 2;;
+	*)		break;;
+    esac
+done
+if [ $# -eq 0 ]; then
+    printUsage "$0" >&2
+    exit 2
+fi
+header="$*"
+# Here, we default to --color=always instead of auto, as the expected use is
+# finally piping into filterEmptyHeaders.
+if [ ! -t 1 ] && [ "$colorArg" = '--color=auto' ] || [ "$colorArg" = '--no-color' ] || [ "$colorArg" = '--color=never' ]; then
+    HEADER_PREFIX=
+    HEADER_SUFFIX=
+fi
+
+printf '\n%s%s%s:\n' "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX"
