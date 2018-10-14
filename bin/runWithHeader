@@ -1,0 +1,123 @@
+#!/bin/bash
+
+printShortUsage()
+{
+    printf 'Usage: echo COMMANDS | %q %s\n' "$(basename "$1")" '[--worst-status] [-h|--header HEADER-EXPR] [--summarize-failed ERROR-TEXT [--summarize-failed-header HEADER] [--summarize-failed-separator SEP]] [-?|-h|--help]'
+    printf 'Usage: %q %s <<EOF\n  COMMANDS\nEOF\n' "$(basename "$1")" '[...]'
+    printf 'Usage: [...] %q %s | filterEmptyHeaders\n' "$(basename "$1")" '[...]'
+}
+printUsage()
+{
+    # This is the short help when launched with no or incorrect arguments.
+    # It is printed to stderr to avoid accidental processing.
+    printShortUsage "$1" >&2
+    printf >&2 'Try %q --help for more information.\n' "$(basename "$1")"
+}
+printLongUsage()
+{
+    # This is the long "man page" when launched with the help argument.
+    # It is printed to stdout to allow paging with 'more'.
+    cat <<HELPDESCRIPTION
+Run the COMMANDS read from stdin, each prefixed by a header that highlights the
+executed COMMAND.
+HELPDESCRIPTION
+    echo
+    printShortUsage "$1"
+    cat <<HELPTEXT
+    --worst-status	Return the highest exit status of all COMMANDS instead
+			of the exit status of the last COMMAND.
+    --header|-h HEADER-EXPR
+			Pipe the executed COMMAND through HEADER-EXPR to obtain
+			the header for it.
+			You can alternatively directly set / influence the header within
+			COMMANDS by setting the HEADER=... (only for the next
+			COMMAND), HEADER_PREFIX, or HEADER_SUFFIX variables. If
+			you do this on a separate line with the form
+			HEADER='text' or HEADER="text" or HEADER=text, the
+			update will happen silently; i.e. without printing that
+			command-line.
+    --summarize-failed ERROR-TEXT
+			For each failed line in COMMANDS, record the header /
+			HEADER and summarize those failures at the end with
+			ERROR-TEXT HEADER1 HEADER2 ...
+    --summarize-failed-header HEADER
+			Header printed before the summary of failures. By
+			default, the summary is directly printed after the last
+			COMMAND, without a header segregating it. Alternatively,
+			you can also set this from within COMMANDS by making the
+			last one a HEADER=... one.
+    --summarize-failed-separator SEP
+			Use SEP instead of a space in between HEADER1 HEADER2.
+HELPTEXT
+}
+
+headerExpr=
+isWorstStatus=
+isSummarizeFailed=
+summarizeFailedHeader=
+summarizeFailedSeparator=' '
+summarizeFailedPrefix=
+while [ $# -ne 0 ]
+do
+    case "$1" in
+	--help|-h|-\?)	shift; printLongUsage "$0"; exit 0;;
+	--worst-status)		shift; isWorstStatus=t;;
+	--header|-h)		shift; headerExpr="$1"; shift;;
+	--summarize-failed)	shift; isSummarizeFailed=t; summarizeFailedPrefix="$1"; shift;;
+	--summarize-failed-header)	shift; summarizeFailedHeader="$1"; shift;;
+	--summarize-failed-separator)	shift; summarizeFailedSeparator="$1"; shift;;
+	--)		shift; break;;
+	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printShortUsage "$0"; } >&2; exit 2;;
+	*)		break;;
+    esac
+done
+[ $# -gt 0 ] && { printUsage "$0" >&2; exit 2; }
+
+
+exitStatus=0
+overallExitStatus=0
+summarizeFailures=
+
+# Prevent that read command(s) consume following commands by reading from stdin.
+# Instead, redirect stdin directly from the terminal (if available), or the null
+# device. Note: For some commands, you can also directly influence their
+# behavior; e.g. ssh -n.
+exec 3<&0
+exec 0</dev/tty || exec 0</dev/null
+
+while IFS=$'\n' <&3 read -r command
+do
+    if  [[ "$command" =~ ^[[:space:]]*(HEADER(|_PREFIX|_SUFFIX))=\"[^\"]*\"[[:space:]]*$ ]] || \
+	[[ "$command" =~ ^[[:space:]]*(HEADER(|_PREFIX|_SUFFIX))=\'[^\']*\'[[:space:]]*$ ]] || \
+	[[ "$command" =~ ^[[:space:]]*(HEADER(|_PREFIX|_SUFFIX))=[^\'\"\;\&\|]*[[:space:]]*$ ]]; then
+	# This command solely influences the HEADER; don't log it, just silently
+	# execute it.
+	eval "$command"
+	continue
+    fi
+
+    if [ -n "${HEADER+t}" ]; then
+	header="$HEADER"
+	unset HEADER
+    elif [ "$headerExpr" ]; then
+	header=$(printf '%s' "$command" | eval "$headerExpr")
+    else
+	header="$command"
+    fi
+    header "${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+
+    eval "$command"
+    exitStatus=$?
+
+    [ $exitStatus -eq 0 ] || summarizeFailures="${summarizeFailures}${summarizeFailures:+$summarizeFailedSeparator}${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+    if [ ! "$isWorstStatus" -o $exitStatus -gt $overallExitStatus ]; then
+	overallExitStatus=$exitStatus
+    fi
+done
+if [ "$summarizeFailures" ]; then
+    summarizeHeader="${HEADER-$summarizeFailedHeader}"
+    [ "$summarizeHeader" ] && header "$summarizeHeader" >&2
+    printf >&2 '%s%s\n' "$summarizeFailedPrefix" "$summarizeFailures"
+fi
+
+exit $overallExitStatus
