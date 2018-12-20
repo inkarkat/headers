@@ -77,6 +77,7 @@ done
 exitStatus=0
 overallExitStatus=0
 summarizeFailures=
+headerFirstArg='--first'
 
 # Prevent that read command(s) consume following commands by reading from stdin.
 # Instead, redirect stdin directly from the terminal (if available), or the null
@@ -104,7 +105,8 @@ do
     else
 	header="$command"
     fi
-    header "${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+    header $headerFirstArg "${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+    headerFirstArg=
 
     eval "$command"
     exitStatus=$?
@@ -116,7 +118,7 @@ do
 done
 if [ "$summarizeFailures" ]; then
     summarizeHeader="${HEADER-$summarizeFailedHeader}"
-    [ "$summarizeHeader" ] && header "$summarizeHeader" >&2
+    [ "$summarizeHeader" ] && header $headerFirstArg "$summarizeHeader" >&2
     printf >&2 '%s%s\n' "$summarizeFailedPrefix" "$summarizeFailures"
 fi
 
