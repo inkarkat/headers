@@ -13,8 +13,8 @@ HELPTEXT
     printf 'Usage: %q %s\n' "$(basename "$1")" '[--id ID] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 
-: ${WITHHEADER_PREFIX=[01m}
-: ${WITHHEADER_SUFFIX=[0m}
+: ${HEADER_PREFIX=[01m}
+: ${HEADER_SUFFIX=[0m}
 colorArg=
 isIdChange() { return 1; }
 separator=$'\n'
@@ -50,12 +50,24 @@ if [ $# -eq 0 ]; then
 fi
 header="$*"
 if [ ! -t 1 ] && [ "$colorArg" != '--color=always' ] || [ "$colorArg" = '--no-color' ] || [ "$colorArg" = '--color=never' ]; then
-    WITHHEADER_PREFIX=
-    WITHHEADER_SUFFIX=
+    HEADER_PREFIX=
+    HEADER_SUFFIX=
 fi
 
-output=$(</dev/stdin)
-if [ "$output" ]; then
-    isIdChange && separator=
-    printf "${separator}%s%s%s:\\n%s\\n" "$WITHHEADER_PREFIX" "$header" "$WITHHEADER_SUFFIX" "$output"
-fi
+
+# Consume first line(s) until we have a non-blank one; then we know that we need
+# a header first.
+buffer=
+while IFS=$'\n' </dev/stdin read -r line
+do
+    buffer="${buffer}${line}
+"
+    if [ "$line" ]; then
+	isIdChange && separator=
+	printf "${separator}%s%s%s:\\n%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
+	break
+    fi
+done
+
+# Delete all trailing blank lines at the end of the input.
+exec sed --unbuffered -e :a -e '/^\n*$/{$d; N; ba' -e '}'
