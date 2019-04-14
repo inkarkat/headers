@@ -15,7 +15,7 @@ HELPTEXT
 
 : ${HEADER_PREFIX=[01m}
 : ${HEADER_SUFFIX=[0m}
-colorArg=
+typeset -a colorArg=()
 isIdChange() { return 1; }
 separator=$'\n'
 while [ $# -ne 0 ]
@@ -38,7 +38,8 @@ do
 			    return 1
 			}
 			;;
-	--color=*|--no-color)	colorArg=$1; shift;;
+	--no-color|--color=*)	colorArg=("$1"); shift;;
+	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
 	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printUsage "$0"; } >&2; exit 2;;
 	*)		break;;
@@ -49,7 +50,7 @@ if [ $# -eq 0 ]; then
     exit 2
 fi
 header="$*"
-if [ ! -t 1 ] && [ "$colorArg" != '--color=always' ] || [ "$colorArg" = '--no-color' ] || [ "$colorArg" = '--color=never' ]; then
+if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_PREFIX=
     HEADER_SUFFIX=
 fi
