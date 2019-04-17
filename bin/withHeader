@@ -15,9 +15,10 @@ HELPTEXT
 
 : ${HEADER_PREFIX=[01m}
 : ${HEADER_SUFFIX=[0m}
+: ${HEADER_SEPARATOR=$'\n'}
+: ${HEADER_COLON=:}
 typeset -a colorArg=()
 isIdChange() { return 1; }
-separator=$'\n'
 while [ $# -ne 0 ]
 do
     case "$1" in
@@ -64,8 +65,8 @@ do
     buffer="${buffer}${line}
 "
     if [ "$line" ]; then
-	isIdChange && separator=
-	printf "${separator}%s%s%s:\\n%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
+	isIdChange && HEADER_SEPARATOR=
+	printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}\\n%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
 	break
     fi
 done
