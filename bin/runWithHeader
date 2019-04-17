@@ -105,7 +105,7 @@ do
     else
 	header="$command"
     fi
-    header $headerFirstArg "${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+    header $headerFirstArg "${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"  # Note: These do not override the eponymous highlighting defaults in header itself; they are meant to prefix / suffix the header text itself, in addition to the highlighting.
     headerFirstArg=
 
     eval "$command"
