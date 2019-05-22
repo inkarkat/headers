@@ -13,13 +13,14 @@ HELPTEXT
 
 : ${HEADER_PREFIX=[01m}
 : ${HEADER_SUFFIX=[0m}
+: ${HEADER_SEPARATOR=$'\n'}
+: ${HEADER_COLON=:}
 typeset -a colorArg=()
-separator='\n'
 while [ $# -ne 0 ]
 do
     case "$1" in
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
-	--first)	shift; separator=;;
+	--first)	shift; HEADER_SEPARATOR=;;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -39,4 +40,4 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_SUFFIX=
 fi
 
-printf "${separator}%s%s%s:\\n" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX"
+printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}\\n" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX"
