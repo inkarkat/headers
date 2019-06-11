@@ -10,7 +10,7 @@ HEADERs (except the first one if --id ID (e.g. use PARENT-COMMAND-NAME-\$\$) is
 passed to invocations of this command so that the sequence can be uniquely
 identified).
 HELPTEXT
-    printf 'Usage: %q %s\n' "$(basename "$1")" '[--id ID] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 
 : ${HEADER_PREFIX=[01m}
@@ -60,7 +60,7 @@ fi
 # Consume first line(s) until we have a non-blank one; then we know that we need
 # a header first.
 buffer=
-while IFS=$'\n' </dev/stdin read -r line
+while IFS=$'\n' read -r line || [ -n "$line" ]
 do
     buffer="${buffer}${line}
 "
