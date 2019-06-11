@@ -29,14 +29,13 @@ do
 			    readonly RUNTIME_DIRSPEC=${XDG_RUNTIME_DIR:?}/withHeader
 			    [ -d "$RUNTIME_DIRSPEC" ] || mkdir -p -- "$RUNTIME_DIRSPEC" || { printf >&2 'ERROR: Could not initialize runtime store at %s!\n' "$RUNTIME_DIRSPEC"; exit 3; }
 			    existingIdFilespec="${RUNTIME_DIRSPEC}/id"; existingId=; [ -r "$existingIdFilespec" ] && < "$existingIdFilespec" IFS=$' ' read -r existingId
-			    if [ "$existingId" != "$passedId" ]; then
-				# Omit separator on the first header associated with
-				# ID, and store the ID to be able to recognize it on
-				# subsequent calls.
-				printf '%s\n' "$passedId" > "$existingIdFilespec"
-				return 0
-			    fi
-			    return 1
+			    [ "$existingId" = "$passedId" ] && return 1
+
+			    # Omit separator on the first header associated with
+			    # ID, and store the ID to be able to recognize it on
+			    # subsequent calls.
+			    printf '%s\n' "$passedId" > "$existingIdFilespec"
+			    return 0
 			}
 			;;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
