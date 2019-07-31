@@ -18,10 +18,12 @@ esac
 
 : ${HEADER_PREFIX=[01m}
 : ${HEADER_SUFFIX=[0m}
+: ${HEADER_COLON=:}
 
 literalHeaderPrefix=$(printf %s "$HEADER_PREFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
 literalHeaderSuffix=$(printf %s "$HEADER_SUFFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
-awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}:" '
+literalHeaderColon=$(printf %s "$HEADER_COLON" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
+awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
     NR == 1 && $0 == "" {
 	next
     }
