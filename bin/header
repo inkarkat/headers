@@ -15,8 +15,8 @@ HELPTEXT
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
+: ${HEADER_NEWLINE=:'\n'}
 appendix=
-newline='\n'
 typeset -a colorArg=()
 while [ $# -ne 0 ]
 do
@@ -24,7 +24,7 @@ do
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
 	--first)	shift; HEADER_SEPARATOR=;;
 	--appendix)	shift; appendix="$1"; shift;;
-	--no-newline)	shift; newline='';;
+	--no-newline)	shift; HEADER_NEWLINE=' ';;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -44,4 +44,4 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_SUFFIX=
 fi
 
-printf "${HEADER_SEPARATOR}%s%s%s%s${HEADER_COLON}${newline}" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "${appendix:+ (}${appendix}${appendix:+)}"
+printf "${HEADER_SEPARATOR}%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "${appendix:+ (}${appendix}${appendix:+)}"
