@@ -7,7 +7,7 @@ Print HEADER (before any command output); when combined with filterEmptyHeaders,
 those headers where no command output followed can be finally filtered out.
 HELPTEXT
     scriptName="$(basename "$1")"
-    printf 'Usage: %q %s\n' "$scriptName" '[--first] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: %q %s\n' "$scriptName" '[--first] [--appendix TEXT] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
     printf 'Usage: { %q HEADER1; CMD1; %q HEADER2; CMD2; [...]; } | filterEmptyHeaders\n' "$scriptName" "$scriptName"
 }
 
@@ -15,12 +15,16 @@ HELPTEXT
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
+appendix=
+newline='\n'
 typeset -a colorArg=()
 while [ $# -ne 0 ]
 do
     case "$1" in
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
 	--first)	shift; HEADER_SEPARATOR=;;
+	--appendix)	shift; appendix="$1"; shift;;
+	--no-newline)	shift; newline='';;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -40,4 +44,4 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_SUFFIX=
 fi
 
-printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}\\n" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX"
+printf "${HEADER_SEPARATOR}%s%s%s%s${HEADER_COLON}${newline}" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "${appendix:+ (}${appendix}${appendix:+)}"
