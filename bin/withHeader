@@ -24,18 +24,21 @@ do
     case "$1" in
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
 	--id)		shift; passedId="$1"; shift
+			marker()
+			{
+			    XDG_CONFIG_HOME=${XDG_RUNTIME_DIR:?} executionMarker --group withHeader "$@"
+			}
 			isIdChange()
 			{
-			    readonly RUNTIME_DIRSPEC=${XDG_RUNTIME_DIR:?}/withHeader
-			    [ -d "$RUNTIME_DIRSPEC" ] || mkdir -p -- "$RUNTIME_DIRSPEC" || { printf >&2 'ERROR: Could not initialize runtime store at %s!\n' "$RUNTIME_DIRSPEC"; exit 3; }
-			    existingIdFilespec="${RUNTIME_DIRSPEC}/id"; existingId=; [ -r "$existingIdFilespec" ] && < "$existingIdFilespec" IFS=$' ' read -r existingId
-			    [ "$existingId" = "$passedId" ] && return 1
+			    local isChange=t
+			    marker --query "$passedId" --within 1h && isChange=
 
 			    # Omit separator on the first header associated with
-			    # ID, and store the ID to be able to recognize it on
+			    # ID, and record the ID to be able to recognize it on
 			    # subsequent calls.
-			    printf '%s\n' "$passedId" > "$existingIdFilespec"
-			    return 0
+			    marker --update "$passedId"
+
+			    [ "$isChange" ]
 			}
 			;;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
