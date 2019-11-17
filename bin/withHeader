@@ -10,13 +10,14 @@ HEADERs (except the first one if --id ID (e.g. use PARENT-COMMAND-NAME-\$\$) is
 passed to invocations of this command so that the sequence can be uniquely
 identified).
 HELPTEXT
-    printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 
 : ${HEADER_PREFIX=[01m}
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
+: ${HEADER_NEWLINE=:'\n'}
 typeset -a colorArg=()
 isIdChange() { return 1; }
 while [ $# -ne 0 ]
@@ -41,6 +42,7 @@ do
 			    [ "$isChange" ]
 			}
 			;;
+	--no-newline)	shift; HEADER_NEWLINE=' ';;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -68,7 +70,7 @@ do
 "
     if [ "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=
-	printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}\\n%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
+	printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}${HEADER_NEWLINE}%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
 	break
     fi
 done
