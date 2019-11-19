@@ -15,7 +15,7 @@ HELPTEXT
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
-: ${HEADER_NEWLINE=:'\n'}
+: ${HEADER_NEWLINE='\n'}
 : ${HEADER_WIDTH=}
 appendix=
 typeset -a colorArg=()
