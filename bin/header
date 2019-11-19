@@ -16,6 +16,7 @@ HELPTEXT
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=:'\n'}
+: ${HEADER_WIDTH=}
 appendix=
 typeset -a colorArg=()
 while [ $# -ne 0 ]
@@ -37,6 +38,8 @@ if [ $# -eq 0 ]; then
     exit 2
 fi
 header="$*"
+[ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
+
 # Here, we default to --color=always instead of auto, as the expected use is
 # finally piping into filterEmptyHeaders.
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
