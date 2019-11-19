@@ -18,6 +18,7 @@ HELPTEXT
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=:'\n'}
+: ${HEADER_WIDTH=}
 typeset -a colorArg=()
 isIdChange() { return 1; }
 while [ $# -ne 0 ]
@@ -55,6 +56,8 @@ if [ $# -eq 0 ]; then
     exit 2
 fi
 header="$*"
+[ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
+
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_PREFIX=
     HEADER_SUFFIX=
