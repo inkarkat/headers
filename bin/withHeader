@@ -17,7 +17,7 @@ HELPTEXT
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
-: ${HEADER_NEWLINE=:'\n'}
+: ${HEADER_NEWLINE='\n'}
 : ${HEADER_WIDTH=}
 typeset -a colorArg=()
 isIdChange() { return 1; }
