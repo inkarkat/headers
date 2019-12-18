@@ -84,7 +84,9 @@ headerFirstArg='--first'
 # device. Note: For some commands, you can also directly influence their
 # behavior; e.g. ssh -n.
 exec 3<&0
-exec 0</dev/tty || exec 0</dev/null
+# Force reading directly from terminal / null device if stdin is redirected,
+# to avoid consuming input.
+{ exec 0</dev/tty; } 2>/dev/null || exec </dev/null
 
 while IFS=$'\n' <&3 read -r command || [ -n "$command" ]
 do
