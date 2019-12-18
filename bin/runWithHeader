@@ -86,7 +86,7 @@ headerFirstArg='--first'
 exec 3<&0
 exec 0</dev/tty || exec 0</dev/null
 
-while IFS=$'\n' <&3 read -r command
+while IFS=$'\n' <&3 read -r command || [ -n "$command" ]
 do
     if  [[ "$command" =~ ^[[:space:]]*(HEADER(|_PREFIX|_SUFFIX))=\"[^\"]*\"[[:space:]]*$ ]] || \
 	[[ "$command" =~ ^[[:space:]]*(HEADER(|_PREFIX|_SUFFIX))=\'[^\']*\'[[:space:]]*$ ]] || \
