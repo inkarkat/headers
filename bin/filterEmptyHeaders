@@ -24,48 +24,48 @@ literalHeaderPrefix=$(printf %s "$HEADER_PREFIX" | sed -e 's/[][\$*+?{}.|()^]/\\
 literalHeaderSuffix=$(printf %s "$HEADER_SUFFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
 literalHeaderColon=$(printf %s "$HEADER_COLON" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
 awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
-    NR == 1 && $0 == "" {
-	next
+NR == 1 && $0 == "" {
+    next
+}
+$0 == "" {
+    suspect = ""
+    while ($0 ~ /^\n*$/) {
+	if (getline != 1) {
+	    next
+	}
+	if ($0 ~ "^" unanchoredHeaderExpr "$") {
+	    suspect = "\n"
+	    break
+	}
+	suspect = suspect "\n"
     }
-    $0 == "" {
-	suspect = ""
-	while ($0 ~ /^\n*$/) {
-	    if (getline != 1) {
+    $0 = suspect $0
+}
+$0 ~ "^\n*" unanchoredHeaderExpr "$" {
+    suspect = $0
+    while (1) {
+	lookahead = ""
+	while (lookahead ~ /^\n*$/) {
+	    if (getline lookahead != 1) {
 		next
 	    }
-	    if ($0 ~ "^" unanchoredHeaderExpr "$") {
-		suspect = "\n"
-		break
-	    }
-	    suspect = suspect "\n"
-	}
-	$0 = suspect $0
-    }
-    $0 ~ "^\n*" unanchoredHeaderExpr "$" {
-	suspect = $0
-	while (1) {
-	    lookahead = ""
-	    while (lookahead ~ /^\n*$/) {
-		if (getline lookahead != 1) {
-		    next
-		}
-		if (lookahead == "") {
-		    suspect = suspect "\n"
-		}
-	    }
-	    if (lookahead ~ "\n*" unanchoredHeaderExpr "$") {
-		gsub(/^\n*/, "\n", lookahead)
-		suspect = lookahead
-	    } else {
-		print suspect
-		print lookahead
-		fflush()
-		next
+	    if (lookahead == "") {
+		suspect = suspect "\n"
 	    }
 	}
+	if (lookahead ~ "\n*" unanchoredHeaderExpr "$") {
+	    gsub(/^\n*/, "\n", lookahead)
+	    suspect = lookahead
+	} else {
+	    print suspect
+	    print lookahead
+	    fflush()
+	    next
+	}
     }
-    {
-	print
-	fflush()
-    }
+}
+{
+    print
+    fflush()
+}
 '
