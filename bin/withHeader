@@ -28,7 +28,7 @@ do
 	--id)		shift; passedId="$1"; shift
 			marker()
 			{
-			    XDG_CONFIG_HOME=${XDG_RUNTIME_DIR:?} executionMarker --group withHeader "$@"
+			    executionMarker --base-type runtime --group withHeader "$@"
 			}
 			isIdChange()
 			{
