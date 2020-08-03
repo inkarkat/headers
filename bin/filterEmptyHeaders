@@ -20,9 +20,13 @@ esac
 : ${HEADER_SUFFIX=[0m}
 : ${HEADER_COLON=:}
 
-literalHeaderPrefix=$(printf %s "$HEADER_PREFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
-literalHeaderSuffix=$(printf %s "$HEADER_SUFFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
-literalHeaderColon=$(printf %s "$HEADER_COLON" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
+literalAwkExtendedPattern()
+{
+    printf %s "${1?}" | sed -e 's/\\/\\\\\\\\/g' -e 's/[][$*+?{}.|()^]/\\\\&/g'
+}
+literalHeaderPrefix="$(literalAwkExtendedPattern "$HEADER_PREFIX")"
+literalHeaderSuffix="$(literalAwkExtendedPattern "$HEADER_SUFFIX")"
+literalHeaderColon="$(literalAwkExtendedPattern "$HEADER_COLON")"
 exec awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
 NR == 1 && $0 == "" {
     next
