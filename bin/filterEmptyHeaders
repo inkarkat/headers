@@ -9,7 +9,7 @@ anything) from standard input. Also removes the initial empty line before the
 first header, and condenses trailing empty lines before the next header to a
 single empty line and deletes those at the end of the input completely.
 HELPTEXT
-    printf 'Usage: %q %s\n' "$(basename "$1")" '[-f|--foo bar] [FILE, ...] [-?|-h|--help]'
+    printf 'Usage: %q %s\n' "$(basename "$1")" '[-?|-h|--help]'
 }
 case "$1" in
     --help|-h|-\?)	shift; printUsage "$0"; exit 0;;
@@ -23,7 +23,7 @@ esac
 literalHeaderPrefix=$(printf %s "$HEADER_PREFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
 literalHeaderSuffix=$(printf %s "$HEADER_SUFFIX" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
 literalHeaderColon=$(printf %s "$HEADER_COLON" | sed -e 's/[][\$*+?{}.|()^]/\\\\&/g')
-awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
+exec awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
 NR == 1 && $0 == "" {
     next
 }
