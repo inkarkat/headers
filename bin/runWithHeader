@@ -3,6 +3,7 @@
 printShortUsage()
 {
     printf 'Usage: echo COMMANDLINES | %q %s\n' "$(basename "$1")" '[--worst-status] [-h|--header HEADER-EXPR] [--summarize-failed ERROR-TEXT [--summarize-failed-header HEADER] [--summarize-failed-separator SEP]] [-?|-h|--help]'
+    echo
     printf 'Usage: %q %s <<EOF\n  COMMANDS\nEOF\n' "$(basename "$1")" '[...]'
     printf 'Usage: [...] %q %s | filterEmptyHeaders\n' "$(basename "$1")" '[...]'
 }
@@ -11,7 +12,7 @@ printUsage()
     # This is the short help when launched with no or incorrect arguments.
     # It is printed to stderr to avoid accidental processing.
     printShortUsage "$1" >&2
-    printf >&2 'Try %q --help for more information.\n' "$(basename "$1")"
+    printf >&2 '\nTry %q --help for more information.\n' "$(basename "$1")"
 }
 printLongUsage()
 {
@@ -67,7 +68,7 @@ do
 	--summarize-failed-header)	shift; summarizeFailedHeader="$1"; shift;;
 	--summarize-failed-separator)	shift; summarizeFailedSeparator="$1"; shift;;
 	--)		shift; break;;
-	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printShortUsage "$0"; } >&2; exit 2;;
+	-*)		{ echo "ERROR: Unknown option \"$1\"!"; echo; printUsage "$0"; } >&2; exit 2;;
 	*)		break;;
     esac
 done
