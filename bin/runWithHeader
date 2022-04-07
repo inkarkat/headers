@@ -114,7 +114,7 @@ do
     eval "$command"
     exitStatus=$?
 
-    [ $exitStatus -eq 0 ] || summarizeFailures="${summarizeFailures}${summarizeFailures:+$summarizeFailedSeparator}${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
+    [ $exitStatus -eq 0 ] || summarizeFailures+="${summarizeFailures:+$summarizeFailedSeparator}${HEADER_PREFIX:-}${header}${HEADER_SUFFIX:-}"
     if [ ! "$isWorstStatus" -o $exitStatus -gt $overallExitStatus ]; then
 	overallExitStatus=$exitStatus
     fi

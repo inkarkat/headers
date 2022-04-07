@@ -69,9 +69,8 @@ fi
 buffer=
 while IFS=$'\n' read -r line || [ -n "$line" ]
 do
-    buffer="${buffer}${line}
-"
-    if [ "$line" ]; then
+    buffer+="$line"$'\n'
+    if [ -n "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=
 	printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}${HEADER_NEWLINE}%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
 	break
