@@ -6,9 +6,13 @@ printUsage()
 Print HEADER (before any command output); when combined with filterEmptyHeaders,
 those headers where no command output followed can be finally filtered out.
 HELPTEXT
-    scriptName="$(basename "$1")"
-    printf 'Usage: %q %s\n' "$scriptName" '[--first] [--appendix TEXT] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    echo
+    local scriptName="$(basename "$1")"
+    printf 'Usage: %q %s\n' "$scriptName" '[--first|--id ID] [--appendix TEXT] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    echo
     printf 'Usage: { %q HEADER1; CMD1; %q HEADER2; CMD2; [...]; } | filterEmptyHeaders\n' "$scriptName" "$scriptName"
+    echo
+    printf 'Usage: %q --id PARENT-COMMAND-NAME-$$ HEADER1; CMD1; %q --id PARENT-COMMAND-NAME-$$ HEADER2; CMD2; [...]\n' "$scriptName" "$scriptName"
 }
 
 : ${HEADER_PREFIX=[01m}
@@ -23,7 +27,19 @@ while [ $# -ne 0 ]
 do
     case "$1" in
 	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
-	--first)	shift; HEADER_SEPARATOR=;;
+	--first)	shift; HEADER_SEPARATOR='';;
+	--id)		shift; passedId="$1"; shift
+			marker()
+			{
+			    executionMarker --base-type runtime --group header "$@"
+			}
+			marker --query "$passedId" --within 1h || HEADER_SEPARATOR=''
+
+			# Omit separator on the first header associated with
+			# ID, and record the ID to be able to recognize it on
+			# subsequent calls.
+			marker --update "$passedId"
+			;;
 	--appendix)	shift; appendix="$1"; shift;;
 	--no-newline)	shift; HEADER_NEWLINE=' ';;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
