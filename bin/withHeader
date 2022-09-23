@@ -1,17 +1,39 @@
 #!/bin/bash
 
+printShortUsage()
+{
+    # Note: short followed by long option; if the user knows the short one, she can
+    # skim the long one.
+    printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+}
 printUsage()
 {
-    cat <<HELPTEXT
+    # This is the short help when launched with no or incorrect arguments.
+    # It is printed to stderr to avoid accidental processing.
+    printShortUsage "$1" >&2
+    printf >&2 '\nTry %q --help for more information.\n' "$(basename "$1")"
+}
+printLongUsage()
+{
+    # This is the long "man page" when launched with the help argument.
+    # It is printed to stdout to allow paging with 'more'.
+    cat <<HELPDESCRIPTION
 If non-empty input is piped into this command, prepends HEADER before the
 output. If there's no output, nothing is printed. Trailing empty lines at the
 end of the input are omitted. An empty separator line is added before all
-HEADERs (except the first one if --id ID (e.g. use PARENT-COMMAND-NAME-\$\$) is
-passed to invocations of this command so that the sequence can be uniquely
-identified).
-HELPTEXT
+HEADERs (except the first one).
+HELPDESCRIPTION
     echo
-    printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printShortUsage "$1"
+    echo
+    cat <<HELPTEXT
+    --id ID		ID to uniquely identify invocations of this command
+			(e.g. use PARENT-COMMAND-NAME-\$\$), so that the first
+			one does not add an empty separator line.
+    --no-newline	Directly append input after the header and indent
+			additional indent lines by the header width. By default,
+			input appears unindented on new lines.
+HELPTEXT
 }
 
 : ${HEADER_PREFIX=[01m}
@@ -26,7 +48,7 @@ isIdChange() { return 1; }
 while [ $# -ne 0 ]
 do
     case "$1" in
-	--help|-h|-\?)	shift; printUsage "$0"; exit 0;;
+	--help|-h|-\?)	shift; printLongUsage "$0"; exit 0;;
 	--id)		shift; passedId="$1"; shift
 			marker()
 			{
