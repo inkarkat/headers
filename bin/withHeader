@@ -10,6 +10,7 @@ HEADERs (except the first one if --id ID (e.g. use PARENT-COMMAND-NAME-\$\$) is
 passed to invocations of this command so that the sequence can be uniquely
 identified).
 HELPTEXT
+    echo
     printf 'Usage: cat FILE [...] | %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 
@@ -20,6 +21,7 @@ HELPTEXT
 : ${HEADER_NEWLINE='\n'}
 : ${HEADER_WIDTH=}
 typeset -a colorArg=()
+isHeaderIndent=
 isIdChange() { return 1; }
 while [ $# -ne 0 ]
 do
@@ -43,7 +45,7 @@ do
 			    [ "$isChange" ]
 			}
 			;;
-	--no-newline)	shift; HEADER_NEWLINE=' ';;
+	--no-newline)	shift; HEADER_NEWLINE=' '; isHeaderIndent=t;;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -63,6 +65,11 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_SUFFIX=
 fi
 
+typeset -a furtherLineProcessingSedArgs=()
+if [ "$isHeaderIndent" ]; then
+    printf -v headerLikeIndent "%$((${#header} + ${#HEADER_COLON} + ${#HEADER_NEWLINE}))s" ' '
+    furtherLineProcessingSedArgs=(-e "/./s/^/${headerLikeIndent}/")
+fi
 
 # Consume first line(s) until we have a non-blank one; then we know that we need
 # a header first.
@@ -78,4 +85,4 @@ do
 done
 
 # Delete all trailing blank lines at the end of the input.
-exec sed --unbuffered -e :a -e '/^\n*$/{$d; N; ba' -e '}'
+exec sed --unbuffered "${furtherLineProcessingSedArgs[@]}" -e :a -e '/^\n*$/{$d; N; ba' -e '}'
