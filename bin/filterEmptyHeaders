@@ -16,18 +16,20 @@ case "$1" in
 esac
 
 
-: ${HEADER_PREFIX=[01m}
-: ${HEADER_SUFFIX=[0m}
+: ${HEADER_COLOR=[1m}
+: ${HEADER_RESET=[0m}
 : ${HEADER_COLON=:}
 
 literalAwkExtendedPattern()
 {
     printf %s "${1?}" | sed -e 's/\\/\\\\\\\\/g' -e 's/[][$*+?{}.|()^]/\\\\&/g'
 }
+literalHeaderColor="$(literalAwkExtendedPattern "$HEADER_COLOR")"
 literalHeaderPrefix="$(literalAwkExtendedPattern "$HEADER_PREFIX")"
 literalHeaderSuffix="$(literalAwkExtendedPattern "$HEADER_SUFFIX")"
+literalHeaderReset="$(literalAwkExtendedPattern "$HEADER_RESET")"
 literalHeaderColon="$(literalAwkExtendedPattern "$HEADER_COLON")"
-exec awk -v unanchoredHeaderExpr="${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderColon}" '
+exec awk -v unanchoredHeaderExpr="${literalHeaderColor}${literalHeaderPrefix}.+${literalHeaderSuffix}${literalHeaderReset}${literalHeaderColon}" '
 NR == 1 && $0 == "" {
     next
 }

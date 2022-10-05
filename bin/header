@@ -15,8 +15,8 @@ HELPTEXT
     printf 'Usage: %q --id PARENT-COMMAND-NAME-$$ HEADER1; CMD1; %q --id PARENT-COMMAND-NAME-$$ HEADER2; CMD2; [...]\n' "$scriptName" "$scriptName"
 }
 
-: ${HEADER_PREFIX=[01m}
-: ${HEADER_SUFFIX=[0m}
+: ${HEADER_COLOR=[1m}
+: ${HEADER_RESET=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE='\n'}
@@ -59,8 +59,8 @@ header="$*"
 # Here, we default to --color=always instead of auto, as the expected use is
 # finally piping into filterEmptyHeaders.
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
-    HEADER_PREFIX=
-    HEADER_SUFFIX=
+    HEADER_COLOR=''
+    HEADER_RESET=''
 fi
 
-printf "${HEADER_SEPARATOR}%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "${appendix:+ (}${appendix}${appendix:+)}"
+printf "${HEADER_SEPARATOR}%s%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "${appendix:+ (}${appendix}${appendix:+)}"

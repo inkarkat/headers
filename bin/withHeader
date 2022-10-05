@@ -36,8 +36,8 @@ HELPDESCRIPTION
 HELPTEXT
 }
 
-: ${HEADER_PREFIX=[01m}
-: ${HEADER_SUFFIX=[0m}
+: ${HEADER_COLOR=[1m}
+: ${HEADER_RESET=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE='\n'}
@@ -83,8 +83,8 @@ header="$*"
 [ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
 
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
-    HEADER_PREFIX=
-    HEADER_SUFFIX=
+    HEADER_COLOR=''
+    HEADER_RESET=''
 fi
 
 typeset -a furtherLineProcessingSedArgs=()
@@ -101,7 +101,7 @@ do
     buffer+="$line"$'\n'
     if [ -n "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=
-	printf "${HEADER_SEPARATOR}%s%s%s${HEADER_COLON}${HEADER_NEWLINE}%s" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$buffer"
+	printf "${HEADER_SEPARATOR}%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}%s" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "$buffer"
 	break
     fi
 done
