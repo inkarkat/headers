@@ -2,7 +2,7 @@
 
 printShortUsage()
 {
-    printf 'Usage: echo COMMANDLINES | %q %s\n' "$(basename "$1")" '[--worst-status] [-h|--header HEADER-EXPR] [--summarize-failed ERROR-TEXT [--summarize-failed-header HEADER] [--summarize-failed-separator SEP]] [-?|-h|--help]'
+    printf 'Usage: echo COMMANDLINES | %q %s\n' "$(basename "$1")" '[--worst-status] [-H|--header HEADER-EXPR] [--summarize-failed ERROR-TEXT [--summarize-failed-header HEADER] [--summarize-failed-separator SEP]] [-?|-h|--help]'
     echo
     printf 'Usage: %q %s <<EOF\n  COMMANDS\nEOF\n' "$(basename "$1")" '[...]'
     printf 'Usage: [...] %q %s | filterEmptyHeaders\n' "$(basename "$1")" '[...]'
@@ -27,7 +27,7 @@ HELPDESCRIPTION
     cat <<HELPTEXT
     --worst-status	Return the highest exit status of all COMMANDS instead
 			of the exit status of the last COMMAND.
-    --header|-h HEADER-EXPR
+    --header|-H HEADER-EXPR
 			Pipe the executed COMMAND through HEADER-EXPR to obtain
 			the header for it.
 			You can alternatively directly set / influence the header within
@@ -63,7 +63,7 @@ do
     case "$1" in
 	--help|-h|-\?)	shift; printLongUsage "$0"; exit 0;;
 	--worst-status)		shift; isWorstStatus=t;;
-	--header|-h)		shift; headerExpr="$1"; shift;;
+	--header|-H)		shift; headerExpr="$1"; shift;;
 	--summarize-failed)	shift; isSummarizeFailed=t; summarizeFailedPrefix="$1"; shift;;
 	--summarize-failed-header)	shift; summarizeFailedHeader="$1"; shift;;
 	--summarize-failed-separator)	shift; summarizeFailedSeparator="$1"; shift;;
