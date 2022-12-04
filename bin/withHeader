@@ -4,7 +4,7 @@ printShortUsage()
 {
     # Note: short followed by long option; if the user knows the short one, she can
     # skim the long one.
-    printf 'Usage: cat FILE [...] | [HEADER_SEPARATOR=...] [HEADER_COLON=...] [HEADER_NEWLINE=...] [HEADER_WIDTH=N] %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | [HEADER_SEPARATOR=...] [HEADER_COLON=...] [HEADER_NEWLINE=...] [HEADER_WIDTH=N] [HEADER_SINK=FILESPEC|&N] %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 printUsage()
 {
@@ -79,6 +79,13 @@ if [ $# -eq 0 ]; then
     printUsage "$0" >&2
     exit 2
 fi
+
+case "$HEADER_SINK" in
+    '')		exec 3>&1;;
+    \&[0-9])	eval "exec 3>$HEADER_SINK";;
+    ?*)		exec 3>>"$HEADER_SINK";;
+esac
+
 header="$*"
 [ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
 
@@ -101,7 +108,8 @@ do
     buffer+="$line"$'\n'
     if [ -n "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=
-	printf "${HEADER_SEPARATOR}%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}%s" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "$buffer"
+	printf >&3 "${HEADER_SEPARATOR}%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET"
+	printf %s "$buffer"
 	break
     fi
 done
