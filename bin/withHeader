@@ -4,7 +4,7 @@ printShortUsage()
 {
     # Note: short followed by long option; if the user knows the short one, she can
     # skim the long one.
-    printf 'Usage: cat FILE [...] | [HEADER_SEPARATOR=...] [HEADER_COLON=...] [HEADER_NEWLINE=...] [HEADER_WIDTH=N] [HEADER_SINK=FILESPEC|&N] %q %s\n' "$(basename "$1")" '[--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | [HEADER_SEPARATOR=...] [HEADER_COLON=...] [HEADER_NEWLINE=...] [HEADER_WIDTH=N] [HEADER_SINK=FILESPEC|&N] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 printUsage()
 {
@@ -27,6 +27,8 @@ HELPDESCRIPTION
     printShortUsage "$1"
     echo
     cat <<HELPTEXT
+    --first		Do not add an empty separator line before this first
+			header.
     --id ID		ID to uniquely identify invocations of this command
 			(e.g. use PARENT-COMMAND-NAME-\$\$), so that the first
 			one does not add an empty separator line.
@@ -49,6 +51,7 @@ while [ $# -ne 0 ]
 do
     case "$1" in
 	--help|-h|-\?)	shift; printLongUsage "$0"; exit 0;;
+	--first)	shift; HEADER_SEPARATOR='';;
 	--id)		shift; passedId="$1"; shift
 			marker()
 			{
@@ -107,7 +110,7 @@ while IFS=$'\n' read -r line || [ -n "$line" ]
 do
     buffer+="$line"$'\n'
     if [ -n "$line" ]; then
-	isIdChange && HEADER_SEPARATOR=
+	isIdChange && HEADER_SEPARATOR=''
 	printf >&3 "${HEADER_SEPARATOR}%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET"
 	printf %s "$buffer"
 	break
