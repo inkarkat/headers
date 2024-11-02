@@ -65,7 +65,7 @@ header="$*"
 
 # Here, we default to --color=always instead of auto, as the expected use is
 # finally piping into filterEmptyHeaders.
-if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
+if ! isNeedColorArgumentWhenPiping "${colorArg[@]:---color=always}"; then
     HEADER_COLOR=''
     HEADER_RESET=''
 fi
