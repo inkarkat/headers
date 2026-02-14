@@ -18,6 +18,7 @@ HELPTEXT
 : ${HEADER_COLOR=[1m}
 : ${HEADER_RESET=[0m}
 : ${HEADER_SEPARATOR=$'\n'}
+: ${HEADER_INDENT=}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE='\n'}
 : ${HEADER_WIDTH=}
@@ -70,4 +71,4 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]:---color=always}"; then
     HEADER_RESET=''
 fi
 
-printf >&3 "${HEADER_SEPARATOR}%s%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "${appendix:+ (}${appendix}${appendix:+)}"
+printf >&3 "${HEADER_SEPARATOR}%s%s%s%s%s%s%s${HEADER_COLON}${HEADER_NEWLINE}" "$HEADER_INDENT" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "${appendix:+ (}${appendix}${appendix:+)}"
