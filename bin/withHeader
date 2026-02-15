@@ -91,7 +91,10 @@ case "$HEADER_SINK" in
 esac
 
 header="${HEADER_PREFIX}${*}${HEADER_SUFFIX}"
-[ -n "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
+if [ -n "$HEADER_WIDTH" ]; then
+    printf -v header "%${HEADER_WIDTH}s" "$header"
+    header="${header:0:${HEADER_WIDTH#-}}"
+fi
 
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_COLOR=''
