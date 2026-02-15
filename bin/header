@@ -61,8 +61,8 @@ case "$HEADER_SINK" in
     ?*)		exec 3>>"$HEADER_SINK";;
 esac
 
-header="$*"
-[ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
+header="${HEADER_PREFIX}${*}${HEADER_SUFFIX}"
+[ -n "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
 
 # Here, we default to --color=always instead of auto, as the expected use is
 # finally piping into filterEmptyHeaders.
@@ -71,4 +71,4 @@ if ! isNeedColorArgumentWhenPiping "${colorArg[@]:---color=always}"; then
     HEADER_RESET=''
 fi
 
-printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "${appendix:+ (}${appendix}${appendix:+)}" "$HEADER_COLON" "$HEADER_NEWLINE"
+printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$header" "$HEADER_RESET" "${appendix:+ (}${appendix}${appendix:+)}" "$HEADER_COLON" "$HEADER_NEWLINE"

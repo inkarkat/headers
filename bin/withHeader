@@ -90,8 +90,8 @@ case "$HEADER_SINK" in
     ?*)		exec 3>>"$HEADER_SINK";;
 esac
 
-header="$*"
-[ "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
+header="${HEADER_PREFIX}${*}${HEADER_SUFFIX}"
+[ -n "$HEADER_WIDTH" ] && printf -v header "%${HEADER_WIDTH}s" "$header"
 
 if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
     HEADER_COLOR=''
@@ -112,7 +112,7 @@ do
     buffer+="$line"$'\n'
     if [ -n "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=''
-	printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$HEADER_PREFIX" "$header" "$HEADER_SUFFIX" "$HEADER_RESET" "$HEADER_COLON" "$HEADER_NEWLINE"
+	printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$header" "$HEADER_RESET" "$HEADER_COLON" "$HEADER_NEWLINE"
 	printf %s "$buffer"
 	break
     fi
