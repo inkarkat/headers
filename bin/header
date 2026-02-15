@@ -15,8 +15,8 @@ HELPTEXT
     printf 'Usage: %q --id PARENT-COMMAND-NAME-$$ HEADER1; CMD1; %q --id PARENT-COMMAND-NAME-$$ HEADER2; CMD2; [...]\n' "$scriptName" "$scriptName"
 }
 
-: ${HEADER_COLOR=[1m}
-: ${HEADER_RESET=[0m}
+: ${HEADER_COLOR='[1m'}
+: ${HEADER_RESET='[0m'}
 : ${HEADER_SEPARATOR=$'\n'}
 : ${HEADER_INDENT=}
 : ${HEADER_COLON=:}
