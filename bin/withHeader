@@ -45,6 +45,7 @@ HELPTEXT
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=$'\n'}
 : ${HEADER_WIDTH=}
+: ${HEADER_ID_INTERVAL:=1h}
 typeset -a colorArg=()
 isHeaderIndent=
 isIdChange() { return 1; }
@@ -61,7 +62,7 @@ do
 			isIdChange()
 			{
 			    local isChange=t
-			    marker --query "$passedId" --within 1h && isChange=
+			    marker --query "$passedId" --newer "$HEADER_ID_INTERVAL" && isChange=
 
 			    # Omit separator on the first header associated with
 			    # ID, and record the ID to be able to recognize it on

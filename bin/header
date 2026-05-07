@@ -22,6 +22,7 @@ HELPTEXT
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=$'\n'}
 : ${HEADER_WIDTH=}
+: ${HEADER_ID_INTERVAL:=1h}
 appendix=
 typeset -a colorArg=()
 while [ $# -ne 0 ]
@@ -34,7 +35,7 @@ do
 			{
 			    executionMarker --base-type runtime --group header "$@"
 			}
-			marker --query "$passedId" --within 1h || HEADER_SEPARATOR=''
+			marker --query "$passedId" --newer "$HEADER_ID_INTERVAL" || HEADER_SEPARATOR=''
 
 			# Omit separator on the first header associated with
 			# ID, and record the ID to be able to recognize it on
