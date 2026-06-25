@@ -4,7 +4,7 @@ printShortUsage()
 {
     # Note: short followed by long option; if the user knows the short one, she can
     # skim the long one.
-    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_WIDTH=N] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_WIDTH=N] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline|--always-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 printUsage()
 {
@@ -35,6 +35,10 @@ HELPDESCRIPTION
     --no-newline	Directly append input after the header and indent
 			additional indent lines by the header width. By default,
 			input appears unindented on new lines.
+    --always-newline	Always print the header on a separate line, even if the
+			input consists only of a single line.
+			By default, a single line of input is printed directly
+			after the header.
 HELPTEXT
 }
 
@@ -53,12 +57,15 @@ esac
 : ${HEADER_INDENT=}
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=$'\n'}
+: ${HEADER_TAB=$'\t'}
 : ${HEADER_WIDTH=}
 : ${HEADER_ID_INTERVAL:=1h}
 
 typeset -a colorArg=()
 isHeaderIndent=
+isAlwaysNewline=
 isIdChange() { return 1; }
+clearId() { :; }
 while [ $# -ne 0 ]
 do
     case "$1" in
@@ -81,8 +88,14 @@ do
 
 			    [ "$isChange" ]
 			}
+			clearId()
+			{
+			    marker --delete "$passedId"
+			}
 			;;
 	--no-newline)	shift; HEADER_NEWLINE=' '; isHeaderIndent=t;;
+	--always-newline)
+			shift; isAlwaysNewline=t;;
 	--no-color|--color=*)	colorArg=("$1"); shift;;
 	--color)		colorArg=("$1" "$2"); shift; shift;;
 	--)		shift; break;;
@@ -118,19 +131,34 @@ if [ "$isHeaderIndent" ]; then
     furtherLineProcessingSedArgs=(-e "/./s/^/${headerLikeIndent}/")
 fi
 
+typeset -a buffer=()
+printHeaderAndBuffer()
+{
+    isIdChange && HEADER_SEPARATOR=''
+    printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$header" "$HEADER_RESET" "$HEADER_COLON" "$HEADER_NEWLINE"
+    printf '%s\n' "${buffer[@]}"
+    buffer=()
+}
+
 # Consume first line(s) until we have a non-blank one; then we know that we need
 # a header first.
-buffer=
 while IFS=$'\n' read -r line || [ -n "$line" ]
 do
-    buffer+="$line"$'\n'
+    buffer+=("$line")
     if [ -n "$line" ]; then
-	isIdChange && HEADER_SEPARATOR=''
-	printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$header" "$HEADER_RESET" "$HEADER_COLON" "$HEADER_NEWLINE"
-	printf %s "$buffer"
-	break
+	if [ "$isAlwaysNewline" ] || [ ${#buffer[@]} -gt 1 ]; then
+	    printHeaderAndBuffer
+	    break
+	fi
     fi
 done
+if [ ${#buffer[@]} -eq 1 ]; then
+    # Print a single line of input directly after the header.
+    HEADER_NEWLINE="$HEADER_TAB" printHeaderAndBuffer
+    clearId # We don't need a separator line after an inline header with a single line of input.
+elif [ ${#buffer[@]} -gt 1 ]; then
+    printf >&2 'ASSERT: Expected 0 or 1 lines in buffer, but got %d.\n' ${#buffer[@]}; exit 3
+fi
 
 # Delete all trailing blank lines at the end of the input.
 exec sed --unbuffered "${furtherLineProcessingSedArgs[@]}" -e :a -e '/^\n*$/{$d; N; ba' -e '}'
