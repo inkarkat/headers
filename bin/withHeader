@@ -120,14 +120,14 @@ fi
 
 # Consume first line(s) until we have a non-blank one; then we know that we need
 # a header first.
-buffer=
+typeset -a buffer=()
 while IFS=$'\n' read -r line || [ -n "$line" ]
 do
-    buffer+="$line"$'\n'
+    buffer+=("$line")
     if [ -n "$line" ]; then
 	isIdChange && HEADER_SEPARATOR=''
 	printf >&3 %s "$HEADER_SEPARATOR" "$HEADER_INDENT" "$HEADER_COLOR" "$header" "$HEADER_RESET" "$HEADER_COLON" "$HEADER_NEWLINE"
-	printf %s "$buffer"
+	printf '%s\n' "${buffer[@]}"
 	break
     fi
 done
