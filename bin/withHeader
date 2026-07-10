@@ -4,7 +4,7 @@ printShortUsage()
 {
     # Note: short followed by long option; if the user knows the short one, she can
     # skim the long one.
-    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_WIDTH=N] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline|--always-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_WIDTH=N] [HEADER_ALWAYS_NEWLINE=1|t|true] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline|--always-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 printUsage()
 {
@@ -63,7 +63,7 @@ esac
 
 typeset -a colorArg=()
 isHeaderIndent=
-isAlwaysNewline=
+isAlwaysNewline=$HEADER_ALWAYS_NEWLINE
 isIdChange() { return 1; }
 clearId() { :; }
 while [ $# -ne 0 ]
