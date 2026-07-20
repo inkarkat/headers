@@ -5,7 +5,7 @@ printShortUsage()
 {
     # Note: short followed by long option; if the user knows the short one, she can
     # skim the long one.
-    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_WIDTH=N] [HEADER_ALWAYS_NEWLINE=1|t|true] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline|--always-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
+    printf 'Usage: cat FILE [...] | [HEADER_SINK=FILESPEC|&N] [HEADER_STYLE=dashed-line] [HEADER_MIN_WIDTH=N] [HEADER_WIDTH=N] [HEADER_ALWAYS_NEWLINE=1|t|true] %q %s\n' "$(basename "$1")" '[--first|--id ID] [--no-newline|--always-newline] [--color=(always|auto|never)|--no-color] [--] HEADER [...] [-?|-h|--help]'
 }
 printUsage()
 {
@@ -47,9 +47,8 @@ HELPTEXT
 case "$HEADER_STYLE" in
     dashed-line)
 	: ${HEADER_PREFIX='-- '}
-	: ${HEADER_SUFFIX=' ----------------------------------------------------------------------------'}
+	: ${HEADER_SUFFIX=' --'}
 	: ${HEADER_COLON=''}
-	: ${HEADER_WIDTH=80}
 	;;
 esac
 : ${HEADER_COLOR='[1m'}
@@ -59,7 +58,6 @@ esac
 : ${HEADER_COLON=:}
 : ${HEADER_NEWLINE=$'\n'}
 : ${HEADER_TAB=$'\t'}
-: ${HEADER_WIDTH=}
 : ${HEADER_ID_INTERVAL:=1h}
 
 typeset -a colorArg=()
@@ -109,6 +107,21 @@ if [ $# -eq 0 ]; then
     exit 2
 fi
 
+if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
+    HEADER_COLOR=''
+    HEADER_RESET=''
+fi
+
+# Duplicated to +/HEADER_STYLE withHeader
+case "$HEADER_STYLE" in
+    dashed-line)
+	: ${HEADER_MIN_WIDTH=${COLUMNS:-80}}	# At least that wide.
+	[ -n "$HEADER_COLOR" ] && : ${HEADER_WIDTH=${COLUMNS:-80}}  # Limit if output is for the user (i.e. with color, likely to the terminal).
+	;;
+esac
+: ${HEADER_MIN_WIDTH=}
+: ${HEADER_WIDTH=}
+
 case "$HEADER_SINK" in
     '')		exec 3>&1;;
     \&+([0-9]))	eval "exec 3>$HEADER_SINK";;
@@ -116,14 +129,14 @@ case "$HEADER_SINK" in
 esac
 
 header="${HEADER_PREFIX}${*}${HEADER_SUFFIX}"
+if [ -n "$HEADER_MIN_WIDTH" ] && [ ${#header} -lt $HEADER_MIN_WIDTH ]; then
+    suffixContinuation="${HEADER_SUFFIX: -1}"; : ${suffixContinuation:=' '}
+    printf -v headerPadding "%$((${#header} - HEADER_MIN_WIDTH))s" "$suffixContinuation"; printf -v headerPadding %s "${headerPadding// /$suffixContinuation}"
+    header="${header}${headerPadding}"
+fi
 if [ -n "$HEADER_WIDTH" ]; then
     printf -v header "%${HEADER_WIDTH}s" "$header"
-    header="${header:0:${HEADER_WIDTH#-}}"
-fi
-
-if ! isNeedColorArgumentWhenPiping "${colorArg[@]}"; then
-    HEADER_COLOR=''
-    HEADER_RESET=''
+    header="$(printf %s "$header" | truncatePath --width ${HEADER_WIDTH#-} -)"
 fi
 
 typeset -a furtherLineProcessingSedArgs=()
